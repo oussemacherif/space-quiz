@@ -365,9 +365,25 @@
     let score = 0;
     let selected = null;
     let locked = false;
+    let attemptQuestions = [];
+    let previousQuestionOrder = null;
+
+    function randomizeQuestions() {
+      const shuffled = [...questions];
+      for (let index = shuffled.length - 1; index > 0; index--) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+      }
+      if (previousQuestionOrder && shuffled.length > 1
+        && shuffled.every((question, index) => question === previousQuestionOrder[index])) {
+        [shuffled[0], shuffled[1]] = [shuffled[1], shuffled[0]];
+      }
+      previousQuestionOrder = shuffled;
+      return shuffled;
+    }
 
     function renderQuestion() {
-      const item = questions[current];
+      const item = attemptQuestions[current];
       selected = null;
       locked = false;
       counterEl.textContent = `Question ${current + 1} of ${questions.length}`;
@@ -410,14 +426,14 @@
     function checkAnswer() {
       if (locked) {
         current += 1;
-        if (current === questions.length) showResult();
+        if (current === attemptQuestions.length) showResult();
         else renderQuestion();
         return;
       }
       if (selected === null) return;
 
       locked = true;
-      const item = questions[current];
+      const item = attemptQuestions[current];
       const buttons = [...answersEl.querySelectorAll(".answer")];
       buttons.forEach((button, index) => {
         button.disabled = true;
@@ -463,6 +479,7 @@
     function restartQuiz() {
       current = 0;
       score = 0;
+      attemptQuestions = randomizeQuestions();
       resultEl.classList.add("hidden");
       quizEl.classList.remove("hidden");
       renderQuestion();
@@ -482,7 +499,7 @@
       if (event.key === "Enter" && selected !== null) checkAnswer();
     });
 
-    renderQuestion();
+    restartQuiz();
   </script>
 </body>
 </html>
